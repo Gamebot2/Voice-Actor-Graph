@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Typography, Box, Button, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Card, Button, Menu, MenuItem, Dialog, Classes, Position } from '@blueprintjs/core';
 import ReactFlow, {
     Background,
     Controls,
     MiniMap,
-    Position,
     useNodesState,
     useEdgesState
 } from 'react-flow-renderer';
@@ -234,25 +233,24 @@ function App() {
     };
 
     return (
-        <Container maxWidth="xl">
-            <Box sx={{ my: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 2 }}>
+        <div className="bp4-container" style={{ maxWidth: '100%', margin: '0 auto' }}>
+            <Card className="bp4-card" style={{ margin: '1rem 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <Button
-                        variant="outlined"
-                        color="error"
+                        intent="danger"
+                        outlined
                         onClick={() => setIsDeleteConfirmOpen(true)}
                     >
                         Delete All Connections
                     </Button>
                     <Button
-                        variant="contained"
-                        color="primary"
+                        intent="primary"
                         onClick={() => setIsFormOpen(true)}
                     >
                         Add Connection
                     </Button>
-                </Box>
-                <Box sx={{ height: '80vh', border: '1px solid #ccc', borderRadius: 1 }}>
+                </div>
+                <div style={{ height: '80vh', border: '1px solid #ccc', borderRadius: '3px' }}>
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
@@ -276,43 +274,47 @@ function App() {
                         <Controls />
                         <MiniMap />
                     </ReactFlow>
-                </Box>
-            </Box>
+                </div>
+            </Card>
             <AddConnectionForm
                 open={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 onAdd={fetchGraphData}
             />
             <Dialog
-                open={isDeleteConfirmOpen}
+                isOpen={isDeleteConfirmOpen}
                 onClose={() => setIsDeleteConfirmOpen(false)}
+                title="Confirm Delete All Connections"
             >
-                <DialogTitle>Confirm Delete All Connections</DialogTitle>
-                <DialogContent>
+                <div className={Classes.DIALOG_BODY}>
                     Are you sure you want to delete all connections? This action cannot be undone.
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</Button>
-                    <Button onClick={handleDeleteAllConnections} color="error" variant="contained">
-                        Delete All
-                    </Button>
-                </DialogActions>
+                </div>
+                <div className={Classes.DIALOG_FOOTER}>
+                    <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+                        <Button onClick={() => setIsDeleteConfirmOpen(false)}>Cancel</Button>
+                        <Button intent="danger" onClick={handleDeleteAllConnections}>
+                            Delete All
+                        </Button>
+                    </div>
+                </div>
             </Dialog>
             <Menu
                 open={contextMenu !== null}
                 onClose={handleContextMenuClose}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                    contextMenu !== null
-                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                        : undefined
-                }
+                position={Position.TOP_LEFT}
+                style={{
+                    position: 'fixed',
+                    top: contextMenu?.mouseY,
+                    left: contextMenu?.mouseX,
+                }}
             >
-                <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
-                    Delete {selectedElement?.type === 'edge' ? 'Connection' : selectedElement?.data?.type === 'voice_actor' ? 'Voice Actor' : 'Character'}
-                </MenuItem>
+                <MenuItem
+                    intent="danger"
+                    text={`Delete ${selectedElement?.type === 'edge' ? 'Connection' : selectedElement?.data?.type === 'voice_actor' ? 'Voice Actor' : 'Character'}`}
+                    onClick={handleDelete}
+                />
             </Menu>
-        </Container>
+        </div>
     );
 }
 

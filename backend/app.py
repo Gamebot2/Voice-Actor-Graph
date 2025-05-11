@@ -140,7 +140,7 @@ def handle_characters():
             if 'voice_actor_id' in data:
                 voice_actor = VoiceActor.query.get(data['voice_actor_id'])
                 if voice_actor:
-                    character.voice_actors.append(voice_actor)
+                    voice_actor.characters.append(character)
             
             db.session.add(character)
             db.session.commit()
@@ -195,7 +195,6 @@ def get_graph_data():
         'nodes': nodes,
         'edges': edges
     }
-    print("Sending graph data:", response_data)  # Debug log
     return jsonify(response_data)
 
 if __name__ == '__main__':

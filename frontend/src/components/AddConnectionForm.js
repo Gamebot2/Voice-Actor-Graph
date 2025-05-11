@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
     Button,
-    TextField,
     Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Typography,
-    Autocomplete
-} from '@mui/material';
+    Classes,
+    FormGroup,
+    InputGroup,
+    MenuItem,
+    HTMLSelect,
+    Card
+} from '@blueprintjs/core';
+import { Suggest } from '@blueprintjs/select';
 
 function AddConnectionForm({ open, onClose, onAdd }) {
     const [voiceActors, setVoiceActors] = useState([]);
@@ -88,93 +88,131 @@ function AddConnectionForm({ open, onClose, onAdd }) {
         }
     };
 
+    const renderVoiceActorItem = (item, { handleClick, modifiers }) => {
+        if (!modifiers.matchesPredicate) {
+            return null;
+        }
+        const text = item.inputValue || item.name;
+        return (
+            <MenuItem
+                key={item.id || item.inputValue}
+                text={text}
+                onClick={handleClick}
+                active={modifiers.active}
+            />
+        );
+    };
+
+    const renderCharacterItem = (item, { handleClick, modifiers }) => {
+        if (!modifiers.matchesPredicate) {
+            return null;
+        }
+        const text = item.inputValue
+            ? `${item.inputValue} (New)`
+            : `${item.name} (${item.game})`;
+        return (
+            <MenuItem
+                key={item.id || item.inputValue}
+                text={text}
+                onClick={handleClick}
+                active={modifiers.active}
+            />
+        );
+    };
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Add Voice Actor - Character Connection</DialogTitle>
-            <DialogContent>
-                <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                    <Typography variant="subtitle1" gutterBottom>
-                        Voice Actor
-                    </Typography>
-                    <Autocomplete
-                        value={formData.voiceActor}
-                        onChange={(event, newValue) => {
-                            setFormData({ ...formData, voiceActor: newValue });
-                        }}
-                        options={voiceActors}
-                        getOptionLabel={(option) => {
-                            if (typeof option === 'string') return option;
-                            if (option.inputValue) return option.inputValue;
-                            return option.name;
-                        }}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Select or add voice actor"
-                                sx={{ mb: 2 }}
-                            />
-                        )}
-                        freeSolo
-                        selectOnFocus
-                        clearOnBlur
-                        handleHomeEndKeys
-                        renderOption={(props, option) => <li {...props}>{option.name}</li>}
-                    />
+        <Dialog
+            isOpen={open}
+            onClose={onClose}
+            title="Add Voice Actor - Character Connection"
+            className={Classes.DIALOG}
+        >
+            <div className={Classes.DIALOG_BODY}>
+                <form id="connectionForm">
+                    <FormGroup label="Voice Actor">
+                        <Suggest
+                            items={voiceActors}
+                            itemRenderer={renderVoiceActorItem}
+                            itemPredicate={(query, item) =>
+                                item.name?.toLowerCase().includes(query.toLowerCase()) ||
+                                item.inputValue?.toLowerCase().includes(query.toLowerCase())
+                            }
+                            onItemSelect={(item) => setFormData({ ...formData, voiceActor: item })}
+                            inputValueRenderer={(item) => item.inputValue || item.name}
+                            selectedItem={formData.voiceActor}
+                            createNewItemFromQuery={(query) => ({ inputValue: query })}
+                            createNewItemRenderer={(query, active, handleClick) => (
+                                <MenuItem
+                                    icon="add"
+                                    text={`Create "${query}"`}
+                                    active={active}
+                                    onClick={handleClick}
+                                    shouldDismissPopover={false}
+                                />
+                            )}
+                            fill
+                        />
+                    </FormGroup>
 
-                    <Typography variant="subtitle1" gutterBottom>
-                        Character
-                    </Typography>
-                    <Autocomplete
-                        value={formData.character}
-                        onChange={(event, newValue) => {
-                            setFormData({
+                    <FormGroup label="Character">
+                        <Suggest
+                            items={characters}
+                            itemRenderer={renderCharacterItem}
+                            itemPredicate={(query, item) =>
+                                item.name?.toLowerCase().includes(query.toLowerCase()) ||
+                                item.inputValue?.toLowerCase().includes(query.toLowerCase())
+                            }
+                            onItemSelect={(item) => setFormData({
                                 ...formData,
-                                character: newValue,
-                                // If selecting an existing character, populate the game
-                                game: newValue?.game || ''
-                            });
-                        }}
-                        options={characters}
-                        getOptionLabel={(option) => {
-                            if (typeof option === 'string') return option;
-                            if (option.inputValue) return option.inputValue;
-                            return `${option.name} (${option.game})`;
-                        }}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Select or add character"
-                                sx={{ mb: 2 }}
-                            />
-                        )}
-                        freeSolo
-                        selectOnFocus
-                        clearOnBlur
-                        handleHomeEndKeys
-                        renderOption={(props, option) => (
-                            <li {...props}>
-                                {option.name} ({option.game})
-                            </li>
-                        )}
-                    />
+                                character: item,
+                                game: item.game || ''
+                            })}
+                            inputValueRenderer={(item) =>
+                                item.inputValue
+                                    ? `${item.inputValue} (New)`
+                                    : `${item.name} (${item.game})`
+                            }
+                            selectedItem={formData.character}
+                            createNewItemFromQuery={(query) => ({ inputValue: query })}
+                            createNewItemRenderer={(query, active, handleClick) => (
+                                <MenuItem
+                                    icon="add"
+                                    text={`Create "${query}"`}
+                                    active={active}
+                                    onClick={handleClick}
+                                    shouldDismissPopover={false}
+                                />
+                            )}
+                            fill
+                        />
+                    </FormGroup>
 
-                    <TextField
-                        fullWidth
+                    <FormGroup
                         label="Game"
-                        value={formData.game}
-                        onChange={(e) => setFormData({ ...formData, game: e.target.value })}
-                        disabled={!!formData.character?.id}
                         helperText={formData.character?.id ? "Game is set by the selected character" : "Enter game for new character"}
-                        sx={{ mb: 2 }}
-                    />
-                </Box>
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'flex-end' }}>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleSubmit} variant="contained" color="primary">
-                    Add Connection
-                </Button>
-            </DialogActions>
+                    >
+                        <InputGroup
+                            value={formData.game}
+                            onChange={(e) => setFormData({ ...formData, game: e.target.value })}
+                            disabled={!!formData.character?.id}
+                            fill
+                        />
+                    </FormGroup>
+                </form>
+            </div>
+            <div className={Classes.DIALOG_FOOTER}>
+                <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+                    <Button onClick={onClose}>Cancel</Button>
+                    <Button
+                        intent="primary"
+                        onClick={handleSubmit}
+                        type="submit"
+                        form="connectionForm"
+                    >
+                        Add Connection
+                    </Button>
+                </div>
+            </div>
         </Dialog>
     );
 }
